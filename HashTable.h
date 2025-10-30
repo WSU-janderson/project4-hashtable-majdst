@@ -62,5 +62,9 @@ private:
 
     vector<size_t> offsets;
 
-    size_t hash(const string& key) const;
+    size_t hash(const string& key) const;//hash string key-->index
+
+    void generateOffsets(size_t N);
+
+    void resize(); //alpha>=0.5--> resize
 };
