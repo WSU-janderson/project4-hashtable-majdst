@@ -30,3 +30,25 @@ void HashTable::generateOffsets(size_t N) {
     mt19937 g(rd());
     shuffle(offsets.begin(), offsets.end(), g);
 }
+
+size_t HashTable::hash(const string& key) const {
+    size_t hashvalue = 0;
+    for (char c: key) {
+        hashValue = 37 * hashValue + c;
+    }//just remember--> const mean no change in any class
+
+    return hashValue % capacity();//fitting to table capacity
+}
+
+size_t HashTable::capacity() const {
+    return tableData.size();
+}
+
+size_t HashTable::size() const {
+    return currentSize;
+}
+
+double HashTable::alpha() const {
+
+    return static_cast<double>(size())/static_cast<double>(capacity());
+} //remember--> Static is for floating division -->prevent integer division
