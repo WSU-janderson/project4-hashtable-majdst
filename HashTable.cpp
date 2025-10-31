@@ -52,3 +52,51 @@ double HashTable::alpha() const {
 
     return static_cast<double>(size())/static_cast<double>(capacity());
 } //remember--> Static is for floating division -->prevent integer division
+
+//Hello Weekend :( -->after interview
+
+void HashTable::resize() {
+    vector<HashTableBucket> oldTable = tableData;
+    size_t newCap = capacity()*2; //doubling the size
+
+    tableData.clear();
+    tableData.resize(newCap);
+
+    //reseting the size
+    currentSize = 0;
+
+    for (const auto& bucket : oldTable::Normal) {
+
+        if (bucket.state == BucketType::Normal) {
+
+            insert(bucket.key, bucket.value);
+        }
+    }
+}
+
+bool HashTable::insert(string key, size_t value) {
+    if (alpha() >= 0.5){resize();} // checking --> Need for resize
+
+    size_t home = hash(key); //home bucket index
+
+    std::optional<size_t> firstEAR;
+
+    //HomeBucket First
+    if (tableData[home].state == BucketType::NORMAL) {
+        //checking the duplicate
+        if (tableData[home].key == key) {
+            return false;
+        }
+    } else if (tableData[home].state == BucketType::EAR) {
+        //tombstone
+        firstEAR = home;
+    } else if (tableData[home].state == BucketType::ESS) {
+        //perfect spot--> insert-->Done
+        tableData[home].key = key;
+        tableData[home].value = value;
+        tableData[home].state = BucketType::NORMAL;
+        currentSize++;
+        return true;
+    }
+
+}
