@@ -99,4 +99,34 @@ bool HashTable::insert(string key, size_t value) {
         return true;
     }
 
+    for (size_t offset : offsets) {
+        size_t probeIndex = (home + offset) % capacity();//just probing
+
+        if (tableData[probeIndex].state == BucketType::NORMAL) {//checking for duplicate
+            if (tableData[probeIndex].key == key) {
+                return false; // Duplicate found!
+            }
+        }else if (tableData[probeIndex].state == BucketType::EAR) {
+            if (!firstEAR.has_value()) {
+                firstEAR = probeIndex;
+            }
+        }else if (tableData[probeIndex].state == BucketType::ESS) {
+            size_t insertIndex = firstEAR.has_value() ? firstEAR.value() : probeIndex;
+
+            tableData[insertIndex].key = key;
+            tableData[insertIndex].value = value;
+            tableData[insertIndex].state = BucketType::NORMAL;
+            currentSize++;
+            return true; // Success!
+        }
+    }
+    if (firstEAR.has_value()) {
+        size_t insertIndex = firstEAR.value();
+        tableData[insertIndex].key = key;
+        tableData[insertIndex].value = value;
+        tableData[insertIndex].state = BucketType::NORMAL;
+        currentSize++;
+        return true; // Done
+    }
+    return false;
 }
