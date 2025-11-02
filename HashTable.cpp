@@ -82,7 +82,7 @@ bool HashTable::insert(string key, size_t value) {
     std::optional<size_t> firstEAR;
 
     //HomeBucket First
-    if (tableData[home].state == BucketType::NORMAL) {
+    if (tableData[home].state == BucketType::Normal) {
         //checking the duplicate
         if (tableData[home].key == key) {
             return false;
@@ -94,7 +94,7 @@ bool HashTable::insert(string key, size_t value) {
         //perfect spot--> insert-->Done
         tableData[home].key = key;
         tableData[home].value = value;
-        tableData[home].state = BucketType::NORMAL;
+        tableData[home].state = BucketType::Normal;
         currentSize++;
         return true;
     }
@@ -102,7 +102,7 @@ bool HashTable::insert(string key, size_t value) {
     for (size_t offset : offsets) {
         size_t probeIndex = (home + offset) % capacity();//just probing
 
-        if (tableData[probeIndex].state == BucketType::NORMAL) {//checking for duplicate
+        if (tableData[probeIndex].state == BucketType::Normal) {//checking for duplicate
             if (tableData[probeIndex].key == key) {
                 return false; // Duplicate found!
             }
@@ -115,7 +115,7 @@ bool HashTable::insert(string key, size_t value) {
 
             tableData[insertIndex].key = key;
             tableData[insertIndex].value = value;
-            tableData[insertIndex].state = BucketType::NORMAL;
+            tableData[insertIndex].state = BucketType::Normal;
             currentSize++;
             return true; // Success!
         }
@@ -124,9 +124,165 @@ bool HashTable::insert(string key, size_t value) {
         size_t insertIndex = firstEAR.value();
         tableData[insertIndex].key = key;
         tableData[insertIndex].value = value;
-        tableData[insertIndex].state = BucketType::NORMAL;
+        tableData[insertIndex].state = BucketType::Normal;
         currentSize++;
         return true; // Done
     }
     return false;
+}
+
+//check if a key is or not
+bool HashTable::contains(const string& key) const {
+
+    size_t home = hash(key); //home index
+
+    if (tableData[home].state == BucketType::Normal && tableData[home].key == key) {
+        return true; // found it at home-->yeah
+    }
+    if (tableData[home].state == BucketType::ESS) {
+        return false;//ess-->stop
+    }
+
+    for (size_t offset : offsets) {
+        size_t probeIndex = (home + offset) % capacity();
+
+        if (tableData[probeIndex].state == BucketType::Normal && tableData[probeIndex].key == key) {
+            return true; //found it probing
+        }
+
+        if (tableData[probeIndex].state == BucketType::ESS) {
+            return false;
+        }
+    }
+    return false;
+}
+
+bool HashTable::remove(string key) {
+
+    size_t home = hash(key);
+
+    if (tableData[home].state == BucketType::Normal && tableData[home].key == key) {
+
+        tableData[home].state = BucketType::EAR;
+
+        currentSize--;
+        return true;
+    }
+
+    if (tableData[home].state == BucketType::ESS) {
+        return false; //key not here-->remove
+    }
+
+    for (size_t offset : offsets) {
+        size_t probleIndex = (home+offset) % capacity();
+
+        if (tableData[probeIndex].state == BucketType::Normal && tableData[probeIndex].key == key) {
+
+            tableData[probeIndex].state = BucketType::EAR;
+            currentSize--;
+            return true;
+        }
+
+        if (tableData[probeIndex].state == BucketType::ESS) {
+            return false;
+        }
+    }
+    return false;
+}
+
+optional<size_t> HashTable::get(const string& key) const {
+
+    //home bucket
+    size_t home = hash(key);
+
+    if (tableData[home].state == BucketType::Normal && tableData[home].key == key) {
+
+        return tableData[home].value; //that is what I am looking
+
+    }
+
+    if (tableData[home].state == BucketType::ESS) {
+        return nullopt; //ESS-->key not here
+    }
+
+    for (size_t offset : offsets) {
+        size_t probeIndex = (home+offset)%capacity();
+
+        if (tableData[probeIndex].state == BucketType::NORMAL && tableData[probeIndex].key == key) {
+
+            return tableData[probeIndex].value;
+        }
+
+        if (tableData[probeIndex].state == BucketType::ESS) {
+            return nullopt; //key is not here
+        }
+    }
+
+    return nullopt;
+}
+
+size_t& HashTable::operator[](const string& key) {
+    //key not found--> insert it -->value 0
+    size_t home = hash(key);
+
+    if (tableData[home].state == BucketType::Normal && tableData[home].key == key) {
+
+        return tableData[home].value();
+    }
+
+    for (size_t offset : offsets) {
+        size_t probeIndex = (home+offset)% capacity();
+
+        if (tableData[probeIndex].state == BucketType::ESS) {
+            break;//nothing here
+        }
+    }
+
+    //get here-->no key found-->insert
+    insert(key, 0);
+
+    if (tableData[home].state == BucketType::Normal && tableData[home].key == key) {
+
+        return tableData[home].value;
+        //check home again
+    }
+
+    //insert manually-->not it should be found
+    for (size_t offset : offsets) {
+        size_t probeIndex = (home + offset) % capacity();
+        if (tableData[probeIndex].state == BucketType::Normal && tableData[probeIndex].key == key) {
+            return tableData[probeIndex].value;
+        }
+    }
+
+    throw runtime_error("HashTable ERROR--> no key inserted");
+}
+
+vector<string> HashTable::keys() const {
+    //empty vector
+    vector<string> allkeys;
+
+    for (const auto& bucket : tableData) {
+        //key there
+        if (bucket.state == BucketType::Normal) {
+            allkeys.push_back(bucket,key);
+        }
+    }
+
+    return allkeys;
+}
+
+ostream& operator<<(ostream& os, const HashTable& hashTable) {
+
+    for (size_t i = 0; i < hashTable.capacity(); ++i) {
+
+        const HashTableBucket& bucket = hashTable.tableData[i];
+        //reference-->bucket
+
+        if (bucket.state == BucketType::Normal) {
+            os << "The occupied bucket " << i << ":" << bucket.key << ", " << bucket.value << "\n";
+
+        }
+    }
+    return os;
 }
