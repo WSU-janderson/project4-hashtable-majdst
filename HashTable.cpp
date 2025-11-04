@@ -11,7 +11,7 @@
 using namespace std;
 
 HashTable::HashTable(size_t initCapacity) {
-    currtSize = 0; //defult size -->0
+    currSize = 0; //defult size -->0
 
     tableData.resize(initCapacity); //init ESS
 
@@ -32,7 +32,7 @@ void HashTable::generateOffsets(size_t N) {
 }
 
 size_t HashTable::hash(const string& key) const {
-    size_t hashvalue = 0;
+    size_t hashValue = 0;
     for (char c: key) {
         hashValue = 37 * hashValue + c;
     }//just remember--> const mean no change in any class
@@ -45,7 +45,7 @@ size_t HashTable::capacity() const {
 }
 
 size_t HashTable::size() const {
-    return currentSize;
+    return currSize;
 }
 
 double HashTable::alpha() const {
@@ -63,9 +63,9 @@ void HashTable::resize() {
     tableData.resize(newCap);
 
     //reseting the size
-    currentSize = 0;
+    currSize = 0;
 
-    for (const auto& bucket : oldTable::Normal) {
+    for (const auto& bucket : oldTable) {
 
         if (bucket.state == BucketType::Normal) {
 
@@ -95,7 +95,7 @@ bool HashTable::insert(string key, size_t value) {
         tableData[home].key = key;
         tableData[home].value = value;
         tableData[home].state = BucketType::Normal;
-        currentSize++;
+        currSize++;
         return true;
     }
 
@@ -116,7 +116,7 @@ bool HashTable::insert(string key, size_t value) {
             tableData[insertIndex].key = key;
             tableData[insertIndex].value = value;
             tableData[insertIndex].state = BucketType::Normal;
-            currentSize++;
+            currSize++;
             return true; // Success!
         }
     }
@@ -125,7 +125,7 @@ bool HashTable::insert(string key, size_t value) {
         tableData[insertIndex].key = key;
         tableData[insertIndex].value = value;
         tableData[insertIndex].state = BucketType::Normal;
-        currentSize++;
+        currSize++;
         return true; // Done
     }
     return false;
@@ -165,7 +165,7 @@ bool HashTable::remove(string key) {
 
         tableData[home].state = BucketType::EAR;
 
-        currentSize--;
+        currSize--;
         return true;
     }
 
@@ -174,12 +174,12 @@ bool HashTable::remove(string key) {
     }
 
     for (size_t offset : offsets) {
-        size_t probleIndex = (home+offset) % capacity();
+        size_t probeIndex = (home+offset) % capacity();
 
         if (tableData[probeIndex].state == BucketType::Normal && tableData[probeIndex].key == key) {
 
             tableData[probeIndex].state = BucketType::EAR;
-            currentSize--;
+            currSize--;
             return true;
         }
 
@@ -227,7 +227,7 @@ size_t& HashTable::operator[](const string& key) {
 
     if (tableData[home].state == BucketType::Normal && tableData[home].key == key) {
 
-        return tableData[home].value();
+        return tableData[home].value;
     }
 
     for (size_t offset : offsets) {
@@ -265,7 +265,7 @@ vector<string> HashTable::keys() const {
     for (const auto& bucket : tableData) {
         //key there
         if (bucket.state == BucketType::Normal) {
-            allkeys.push_back(bucket,key);
+            allkeys.push_back(bucket.key);
         }
     }
 
